@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspector Struct: C++ Challenge</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --primary: #1e3a8a;
+            --primary-hover: #1d4ed8;
+            --accent: #d97706;
+            --text: #1f2937;
+            --text-muted: #4b5563;
+            --success: #15803d;
+            --error: #b91c1c;
+            --border: #cbd5e1;
+            --font-main: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --font-code: 'Courier New', Courier, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text);
+            line-height: 1.5;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 850px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        header {
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            border: 2px solid var(--primary);
+            background: transparent;
+            color: var(--primary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .tab-btn.active, .tab-btn:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .view-section {
+            display: none;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        /* CARD STYLES */
+        .card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 18px;
+            margin-bottom: 15px;
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #f8fafc;
+            font-family: var(--font-code);
+            padding: 14px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.95rem;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .highlight {
+            color: #f59e0b;
+            font-weight: bold;
+        }
+
+        /* SFIDA STYLES */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #e2e8f0;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        .timer-box {
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .option-btn {
+            width: 100%;
+            padding: 14px;
+            font-size: 1rem;
+            font-family: var(--font-code);
+            text-align: left;
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            background-color: #eff6ff;
+        }
+
+        .option-btn:focus {
+            outline: 3px solid var(--accent);
+        }
+
+        .option-btn.selected {
+            border-color: var(--primary);
+            background-color: #dbeafe;
+            font-weight: bold;
+        }
+
+        .btn-action {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-action:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-action:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        /* FEEDBACK BOX */
+        .feedback-box {
+            margin-top: 15px;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            display: none;
+        }
+
+        .feedback-box.correct {
+            display: block;
+            background-color: #dcfce7;
+            border: 2px solid var(--success);
+            color: #14532d;
+        }
+
+        .feedback-box.wrong {
+            display: block;
+            background-color: #fee2e2;
+            border: 2px solid var(--error);
+            color: #7f1d1d;
+        }
+
+        .feedback-box .icon {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-right: 6px;
+        }
+
+        .link-scopri {
+            display: inline-block;
+            margin-top: 8px;
+            color: var(--primary);
+            font-weight: bold;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        /* CONFIG PANEL */
+        .config-panel {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+            font-size: 1.1rem;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        /* SUMMARY TABLE */
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .summary-table th, .summary-table td {
+            border: 1px solid var(--border);
+            padding: 10px;
+            text-align: left;
+        }
+
+        .summary-table th {
+            background-color: #f1f5f9;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 8px;
+            }
+            .app-container {
+                padding: 15px;
+            }
+            .tab-btn {
+                font-size: 0.95rem;
+                padding: 10px;
+            }
+            .option-btn {
+                font-size: 0.9rem;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1>🔍 Inspector Struct: C++</h1>
+        <div class="nav-tabs">
+            <button class="tab-btn active" id="btn-tab-scopri" onclick="switchTab('scopri')">📖 SCOPRI (Concetti)</button>
+            <button class="tab-btn" id="btn-tab-sfida" onclick="switchTab('sfida')">⚡ SFIDA (10 Livelli)</button>
+        </div>
+    </header>
+
+    <!-- SEZIONE SCOPRI -->
+    <main id="view-scopri" class="view-section active">
+        <div class="card" id="card-s1">
+            <h2>Scheda 1: Tipo di Dato (struct) vs Variabile</h2>
+            <p>Una <code>struct</code> definisce solo la <strong>struttura</strong> (il modello), ma NON crea dati in memoria.</p>
+            <div class="code-block">struct Persona {
+    string nome;
+    int eta;
+}; // Definizione del TIPO
+
+Persona p1, p2; // Creazione di VARIABILI reali</div>
+            <p>⚠️ <strong>Errore grave comune:</strong> Scrivere <code>Persona.nome = "Mario";</code>. <br>
+            <em>Il tipo <code>Persona</code> non ha memoria! Devi usare la variabile specifica: <code>p1.nome = "Mario";</code>. Ogni variabile (es. <code>p1</code> e <code>p2</code>) ha i propri campi indipendenti. Si possono anche copiare intere strutture dello stesso tipo: <code>p2 = p1;</code>.</em></p>
+        </div>
+
+        <div class="card" id="card-s2">
+            <h2>Scheda 2: Accedere ai Campi e Input/Output (cin / cout)</h2>
+            <p>Per operare su un campo di una struttura (in lettura, scrittura o I/O), devi specificare il <strong>nome della variabile</strong> seguito dal punto <code>.</code> e dal <strong>nome del campo</strong>.</p>
+            <div class="code-block">p1.eta = 18;             // Assegnazione diretta
+cin >> p1.eta;           // Lettura da tastiera
+cout << p1.nome;         // Stampa a schermo</div>
+            <p>⚠️ <strong>Ricorda:</strong> Non puoi fare <code>cin >> p1;</code> per leggere tutti i campi in un colpo solo! Devi leggere i singoli campi uno alla volta (es. <code>cin >> p1.nome; cin >> p1.eta;</code>).</p>
+        </div>
+
+        <div class="card" id="card-s3">
+            <h2>Scheda 3: Vettori dentro le Struct e Operazioni/Calcoli</h2>
+            <p>Se una <code>struct</code> contiene un campo di tipo vettore, per accedere ai suoi elementi o effettuare calcoli (es. somme, medie, cicli <code>for</code>) si specifica prima la variabile struct, poi il punto, poi il nome del vettore e l'indice <code>[ ]</code>.</p>
+            <div class="code-block">struct Registro {
+    string studente;
+    float voti[5];
+};
+
+Registro r1;
+r1.voti[0] = 8.5; // Accesso al PRIMO voto
+
+// Calcolo della somma dei voti:
+float somma = 0;
+for(int i = 0; i < 5; i++) {
+    somma += r1.voti[i];
+}</div>
+            <p>⚠️ <strong>Ricorda:</strong> In C++ gli indici partono da <code>0</code> fino a <code>N-1</code>. Per fare la media dividi la somma per il numero di elementi (es. <code>float media = somma / 5;</code>).</p>
+        </div>
+
+        <div class="card" id="card-s4">
+            <h2>Scheda 4: Struct dentro altre Struct (Annidamento)</h2>
+            <p>Quando un campo di una struct è un'altra struct, si concatenano gli operatori punto <code>.</code> per accedere ai dati più interni (anche con `cin` e `cout`).</p>
+            <div class="code-block">struct Data {
+    int gg, mm, aa;
+};
+
+struct Studente {
+    string cognome;
+    Data dataNascita; // Struct dentro struct
+};
+
+Studente s1;
+s1.dataNascita.aa = 2007;        // Assegnazione
+cin >> s1.dataNascita.gg;        // Input da tastiera
+cout << s1.dataNascita.mm;       // Output</div>
+        </div>
+    </main>
+
+    <!-- SEZIONE SFIDA -->
+    <main id="view-sfida" class="view-section">
+        
+        <!-- Pannello Configurazione Iniziale -->
+        <div id="challenge-config" class="config-panel">
+            <h2>Pronto per la Sfida? 🕵️‍♂️</h2>
+            <p style="margin-top: 8px;">Dovrai superare 10 livelli a difficoltà crescente. Hai 3 tentativi per ciascuna prova.</p>
+            
+            <div class="toggle-container">
+                <label for="timer-toggle">Abilita Timer (90s per prova):</label>
+                <label class="switch">
+                    <input type="checkbox" id="timer-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <button class="btn-action" onclick="startChallenge()">INIZIA LA SFIDA</button>
+        </div>
+
+        <!-- Area Gioco -->
+        <div id="challenge-game" style="display: none;">
+            <div class="status-bar">
+                <span>Livello: <span id="lbl-level">1</span>/10</span>
+                <span>Tentativi rimasti: <span id="lbl-attempts">3</span></span>
+                <div class="timer-box" id="box-timer">
+                    ⏱️ <span id="lbl-timer">90</span>s
+                </div>
+                <button class="btn-action" onclick="startChallenge()" style="width: auto; margin-top: 0; padding: 6px 12px; font-size: 0.85rem; background-color: var(--accent);">🔄 Ricomincia Sfida</button>
+            </div>
+
+            <div class="card">
+                <h2 id="quiz-title">Titolo Livello</h2>
+                <p id="quiz-description">Testo della domanda...</p>
+                <div class="code-block" id="quiz-code"></div>
+
+                <div class="options-grid" id="options-container">
+                    <!-- Opzioni generate da JS -->
+                </div>
+
+                <button class="btn-action" id="btn-submit" onclick="checkAnswer()">CONFERMA RISPOSTA</button>
+
+                <div class="feedback-box" id="feedback-container">
+                    <div id="feedback-text"></div>
+                    <div id="feedback-nav"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Area Risultato Finale -->
+        <div id="challenge-summary" style="display: none;">
+            <div class="card">
+                <h2>🏆 Sfida Completata!</h2>
+                <p style="font-size: 1.1rem; margin-bottom: 15px;">
+                    Punteggio Finale: <strong id="final-score" style="color: var(--primary); font-size: 1.4rem;">0 / 10</strong>
+                </p>
+                <div id="summary-details"></div>
+                <button class="btn-action" onclick="resetChallenge()" style="margin-top: 20px;">RICOMINCIA LA SFIDA</button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    // DATI DELLE PROVE DELLA SFIDA (20 LIVELLI TOTALI NE PORTABITO)
+    const challengeDataPool = [
+        // --- PROVE ESISTENTI (1-10) ---
+        {
+            id: 1,
+            title: "Variabile vs Nome del Tipo",
+            description: "Osserva il codice C++. Qual è la sintassi corretta per assegnare il prezzo di 15.50 al prodotto?",
+            code: "struct Prodotto {\n    int codice;\n    float prezzo;\n};\n\nProdotto p1;",
+            options: [
+                { text: "Prodotto.prezzo = 15.50;", correct: false },
+                { text: "p1.prezzo = 15.50;", correct: true },
+                { text: "prezzo = 15.50;", correct: false },
+                { text: "p1->prezzo = 15.50;", correct: false }
+            ],
+            relatedCard: "card-s1",
+            cardName: "Scheda 1 (Tipo vs Variabile)",
+            explanation: "Non usare mai il nome della struct (Prodotto) per assegnare dati! 'Prodotto' indica solo la struttura. Devi usare il nome della variabile istanziata 'p1'."
+        },
+        {
+            id: 2,
+            title: "Input da Tastiera con cin",
+            description: "Vuoi chiedere all'utente di inserire da tastiera il prezzo della variabile 'p1'. Qual è l'istruzione corretta?",
+            code: "struct Prodotto {\n    int codice;\n    float prezzo;\n};\n\nProdotto p1;",
+            options: [
+                { text: "cin >> Prodotto.prezzo;", correct: false },
+                { text: "cin >> p1.prezzo;", correct: true },
+                { text: "cin >> p1;", correct: false },
+                { text: "cin >> prezzo;", correct: false }
+            ],
+            relatedCard: "card-s2",
+            cardName: "Scheda 2 (Accedere ai Campi e cin/cout)",
+            explanation: "In C++ non puoi fare 'cin >> p1' per l'intera variabile struct né usare il nome del tipo 'Prodotto'. Occorre accedere al singolo campo mediante 'cin >> p1.prezzo;'."
+        },
+        {
+            id: 3,
+            title: "Gestione di Più Variabili Struct",
+            description: "Abbiamo due variabili 'p1' e 'p2' dello stesso tipo. Quale sequenza imposta il codice di 'p2' uguale a quello di 'p1' e ne raddoppia il prezzo?",
+            code: "struct Prodotto {\n    int codice;\n    float prezzo;\n};\n\nProdotto p1, p2;\np1.codice = 101;\np1.prezzo = 20.0;",
+            options: [
+                { text: "p2.codice = p1.codice;\np2.prezzo = p1.prezzo * 2;", correct: true },
+                { text: "Prodotto.codice = p1.codice;\nProdotto.prezzo = p1.prezzo * 2;", correct: false },
+                { text: "p2 = p1 * 2;", correct: false },
+                { text: "p2.codice = codice;\np2.prezzo = prezzo * 2;", correct: false }
+            ],
+            relatedCard: "card-s1",
+            cardName: "Scheda 1 (Tipo vs Variabile e Più Variabili)",
+            explanation: "Ogni variabile ha i propri campi distinti. Per aggiornare 'p2' devi accedere a 'p2.codice' e 'p2.prezzo' riferendoti ai campi di 'p1'."
+        },
+        {
+            id: 4,
+            title: "Accesso ai Vettori nella Struct",
+            description: "Come assegni il voto 8 al PRIMO elemento del vettore 'voti' appartenente alla variabile 'r1'?",
+            code: "struct Registro {\n    string nomeClasse;\n    float voti[10];\n};\n\nRegistro r1;",
+            options: [
+                { text: "r1.voti[1] = 8;", correct: false },
+                { text: "Registro.voti[0] = 8;", correct: false },
+                { text: "r1.voti[0] = 8;", correct: true },
+                { text: "voti[0] = 8;", correct: false }
+            ],
+            relatedCard: "card-s3",
+            cardName: "Scheda 3 (Vettori dentro Struct)",
+            explanation: "In C++ gli indici dei vettori partono da 0! La sintassi corretta richiede la variabile struct, il punto, il nome del vettore e l'indice 0: r1.voti[0]."
+        },
+        {
+            id: 5,
+            title: "Calcoli sul Campo Vettore (Somma)",
+            description: "Qual è la sintassi corretta all'interno del ciclo for per calcolare la somma dei 5 voti contenuti in 'r1'?",
+            code: "struct Registro {\n    string studente;\n    float voti[5];\n};\n\nRegistro r1;\nfloat somma = 0;\nfor(int i = 0; i < 5; i++) {\n    // Quale riga inserire qui?\n}",
+            options: [
+                { text: "somma += r1.voti[i];", correct: true },
+                { text: "somma += Registro.voti[i];", correct: false },
+                { text: "somma += voti[i];", correct: false },
+                { text: "somma += r1[i].voti;", correct: false }
+            ],
+            relatedCard: "card-s3",
+            cardName: "Scheda 3 (Vettori dentro Struct e Calcoli)",
+            explanation: "All'interno del ciclo occorre sommare l'elemento i-esimo dell'array 'voti' di 'r1': si scrive 'r1.voti[i]'."
+        },
+        {
+            id: 6,
+            title: "Stampa Output (cout) di Struct Annidate",
+            description: "Qual è l'istruzione corretta per stampare a schermo il giorno di nascita dello studente 's1'?",
+            code: "struct Data {\n    int gg, mm, aa;\n};\n\nstruct Studente {\n    string cognome;\n    Data dataNascita;\n};\n\nStudente s1;",
+            options: [
+                { text: "cout << s1.gg;", correct: false },
+                { text: "cout << s1.dataNascita.gg;", correct: true },
+                { text: "cout << Studente.Data.gg;", correct: false },
+                { text: "cout << Data.gg;", correct: false }
+            ],
+            relatedCard: "card-s4",
+            cardName: "Scheda 4 (Struct Annidate e cin/cout)",
+            explanation: "Con le struct annidate si concatenano i punti partendo dalla variabile principale: s1 (variabile Studente) -> dataNascita (campo Data) -> gg (campo intero)."
+        },
+        {
+            id: 7,
+            title: "Input da Tastiera in Struct Annidate",
+            description: "Devi acquisire da tastiera l'anno di nascita (campo 'aa') per la variabile 's1'. Qual è la sintassi corretta?",
+            code: "struct Data {\n    int gg, mm, aa;\n};\n\nstruct Studente {\n    string cognome;\n    Data dataNascita;\n};\n\nStudente s1;",
+            options: [
+                { text: "cin >> s1.aa;", correct: false },
+                { text: "cin >> s1.dataNascita.aa;", correct: true },
+                { text: "cin >> Studente.dataNascita.aa;", correct: false },
+                { text: "cin >> s1.Data.aa;", correct: false }
+            ],
+            relatedCard: "card-s4",
+            cardName: "Scheda 4 (Struct Annidate)",
+            explanation: "Non puoi saltare il nome del campo intermedio 'dataNascita' né usare il nome della struct 'Data'. La forma corretta è 'cin >> s1.dataNascita.aa;'."
+        },
+        {
+            id: 8,
+            title: "Calcolo della Media su Campo Vettore",
+            description: "Quale istruzione calcola correttamente la media dei 4 voti memorizzati nell'oggetto 'r1' dopo aver calcolato la somma?",
+            code: "struct SchedaValutazione {\n    string nome;\n    float voti[4];\n};\n\nSchedaValutazione r1;\nfloat somma = 0;\nfor(int i = 0; i < 4; i++) somma += r1.voti[i];\n\nfloat media = 0.0;",
+            options: [
+                { text: "media = somma / 4.0;", correct: true },
+                { text: "media = r1.voti / 4.0;", correct: false },
+                { text: "media = SchedaValutazione.voti / 4.0;", correct: false },
+                { text: "media = r1.somma / 4.0;", correct: false }
+            ],
+            relatedCard: "card-s3",
+            cardName: "Scheda 3 (Calcoli su Vettori in Struct)",
+            explanation: "La variabile 'somma' contiene già il totale accumulato nel ciclo. Basta dividerla per il numero totale dei voti (4.0). Tentare di dividere direttamente 'r1.voti' è un errore di sintassi perché 'voti' è l'intero array."
+        },
+        {
+            id: 9,
+            title: "Assegnazione tra Intere Variabili Struct",
+            description: "Vogliamo copiare tutti i dati della variabile 'p1' nella variabile 'p2' (entrambe dello stesso tipo). Qual è l'istruzione più sintetica ed esatta?",
+            code: "struct Punto2D {\n    float x;\n    float y;\n};\n\nPunto2D p1 = {3.5, 7.2};\nPunto2D p2;",
+            options: [
+                { text: "p2 = p1;", correct: true },
+                { text: "Punto2D = p1;", correct: false },
+                { text: "p2 = Punto2D;", correct: false },
+                { text: "p2.x.y = p1.x.y;", correct: false }
+            ],
+            relatedCard: "card-s1",
+            cardName: "Scheda 1 (Tipo vs Variabile)",
+            explanation: "In C++ è possibile assegnare direttamente un'intera variabile struct a un'altra dello stesso tipo (es. 'p2 = p1;'). C++ copierà automaticamente tutti i campi da p1 a p2."
+        },
+        {
+            id: 10,
+            title: "Debugging Completo (Struct Annidate e Vettori)",
+            description: "Esamina le definizioni e le variabili. Qual è l'UNICA riga di codice C++ priva di errori di sintassi?",
+            code: "struct Tempo {\n    int ore, min;\n};\n\nstruct Corsa {\n    string atleta;\n    Tempo parziali[3]; // 3 tempi parziali\n};\n\nCorsa c1;",
+            options: [
+                { text: "c1.parziali[0].min = 15;", correct: true },
+                { text: "Corsa.parziali[0].min = 15;", correct: false },
+                { text: "c1.parziali.min[0] = 15;", correct: false },
+                { text: "c1.Tempo[0].min = 15;", correct: false }
+            ],
+            relatedCard: "card-s4",
+            cardName: "Scheda 4 e Scheda 3 (Struct Annidate e Vettori)",
+            explanation: "La sintassi corretta segue l'ordine: variabile principale ('c1') -> campo vettore ('parziali') con indice ('[0]') -> campo della sub-struct ('min'). Quindi: c1.parziali[0].min = 15;."
+        },
+        // --- 10 NUOVE PROVE AGGIUNTE (11-20) ---
+        {
+            id: 11,
+            title: "Lettura di più campi con cin",
+            description: "Qual è la modalità corretta per leggere da tastiera prima il nome dell'articolo e poi la sua quantità nella variabile 'art1'?",
+            code: "struct Articolo {\n    string nome;\n    int quantita;\n};\n\nArticolo art1;",
+            options: [
+                { text: "cin >> art1.nome >> art1.quantita;", correct: true },
+                { text: "cin >> Articolo.nome >> Articolo.quantita;", correct: false },
+                { text: "cin >> art1(nome, quantita);", correct: false },
+                { text: "cin >> art1;", correct: false }
+            ],
+            relatedCard: "card-s2",
+            cardName: "Scheda 2 (Accedere ai Campi e cin/cout)",
+            explanation: "In C++ si possono concatenare gli operatori '>>' specificando individualmente ciascun campo preceduto dalla propria variabile struct: cin >> art1.nome >> art1.quantita;."
+        },
+        {
+            id: 12,
+            title: "Stampa Formattata con cout",
+            description: "Quale riga stampa a schermo il cognome dell'impiegato seguito da uno spazio e dal suo stipendio?",
+            code: "struct Impiegato {\n    string cognome;\n    float stipendio;\n};\n\nImpiegato imp;",
+            options: [
+                { text: "cout << imp.cognome << \" \" << imp.stipendio;", correct: true },
+                { text: "cout << Impiegato.cognome << \" \" << Impiegato.stipendio;", correct: false },
+                { text: "cout << imp.cognome.stipendio;", correct: false },
+                { text: "cout << imp[cognome] << imp[stipendio];", correct: false }
+            ],
+            relatedCard: "card-s2",
+            cardName: "Scheda 2 (Accedere ai Campi e cin/cout)",
+            explanation: "Per stampare i campi della variabile 'imp' si concatenano i singoli accessi ai campi con '<<': cout << imp.cognome << \" \" << imp.stipendio;."
+        },
+        {
+            id: 13,
+            title: "Scambio dati tra due variabili Struct",
+            description: "Devi scambiare i dati tra due variabili 'a' e 'b' dello stesso tipo 'Libro'. Qual è la procedura corretta usando una variabile d'appoggio 'temp'?",
+            code: "struct Libro {\n    string titolo;\n    int pagine;\n};\n\nLibro a, b, temp;",
+            options: [
+                { text: "temp = a; a = b; b = temp;", correct: true },
+                { text: "temp.Libro = a.Libro; a = b; b = temp;", correct: false },
+                { text: "Libro = a; a = b; b = Libro;", correct: false },
+                { text: "temp = Libro.a; a = Libro.b; b = temp;", correct: false }
+            ],
+            relatedCard: "card-s1",
+            cardName: "Scheda 1 (Tipo vs Variabile e Più Variabili)",
+            explanation: "Poiché le struct dello stesso tipo possono essere assegnate direttamente in toto, lo scambio classico con variabile temporanea si scrive: temp = a; a = b; b = temp;"
+        },
+        {
+            id: 14,
+            title: "Conteggio su elementi di un Vettore in Struct",
+            description: "Vogliamo contare quanti voti sufficienti (>= 6) sono presenti nell'array 'voti' della variabile 'stud'. Quale istruzione va inserita nel ciclo?",
+            code: "struct Scheda {\n    string alunno;\n    float voti[6];\n};\n\nScheda stud;\nint cont = 0;\nfor(int i = 0; i < 6; i++) {\n    if (/* CONDIZIONE */) cont++;\n}",
+            options: [
+                { text: "stud.voti[i] >= 6", correct: true },
+                { text: "Scheda.voti[i] >= 6", correct: false },
+                { text: "stud[i].voti >= 6", correct: false },
+                { text: "voti[i] >= 6", correct: false }
+            ],
+            relatedCard: "card-s3",
+            cardName: "Scheda 3 (Vettori dentro Struct)",
+            explanation: "All'interno del ciclo si fa riferimento all'elemento i-esimo dell'array 'voti' della variabile 'stud' tramite la sintassi: stud.voti[i]."
+        },
+        {
+            id: 15,
+            title: "Ricerca del valore Massimo in Vettore di Struct",
+            description: "Identifica l'istruzione corretta per aggiornare la variabile 'max' con il valore più alto trovato nel campo vettore 'prezzi' dell'oggetto 'catalogo'.",
+            code: "struct Listino {\n    string categoria;\n    float prezzi[8];\n};\n\nListino catalogo;\nfloat max = catalogo.prezzi[0];\nfor(int i = 1; i < 8; i++) {\n    if (catalogo.prezzi[i] > max) {\n        // Quale riga va qui?\n    }\n}",
+            options: [
+                { text: "max = catalogo.prezzi[i];", correct: true },
+                { text: "max = Listino.prezzi[i];", correct: false },
+                { text: "catalogo.prezzi[i] = max;", correct: false },
+                { text: "max = catalogo[i].prezzi;", correct: false }
+            ],
+            relatedCard: "card-s3",
+            cardName: "Scheda 3 (Vettori dentro Struct e Calcoli)",
+            explanation: "Per salvare il nuovo valore massimo si assegna il campo della variabile alla variabile 'max': max = catalogo.prezzi[i];."
+        },
+        {
+            id: 16,
+            title: "Inizializzazione diretta di Struct Annidate",
+            description: "Data la struttura annidata sotto riportata, qual è l'espressione corretta per assegnare il valore 12 al campo 'mese' della variabile 'c'?",
+            code: "struct Data {\n    int giorno, mese, anno;\n};\n\nstruct Contratto {\n    int id;\n    Data scadenza;\n};\n\nContratto c;",
+            options: [
+                { text: "c.scadenza.mese = 12;", correct: true },
+                { text: "c.Data.mese = 12;", correct: false },
+                { text: "Contratto.scadenza.mese = 12;", correct: false },
+                { text: "c.mese = 12;", correct: false }
+            ],
+            relatedCard: "card-s4",
+            cardName: "Scheda 4 (Struct Annidate)",
+            explanation: "Bisogna seguire il percorso dei dati: nome della variabile principale ('c') -> nome del campo struct ('scadenza') -> nome del sotto-campo ('mese')."
+        },
+        {
+            id: 17,
+            title: "Lettura da Tastiera di Struct Annidata",
+            description: "Devi acquisire da tastiera il giorno e il mese di scadenza del contratto 'c1'. Qual è l'istruzione esatta?",
+            code: "struct Data {\n    int giorno, mese, anno;\n};\n\nstruct Contratto {\n    int id;\n    Data scadenza;\n};\n\nContratto c1;",
+            options: [
+                { text: "cin >> c1.scadenza.giorno >> c1.scadenza.mese;", correct: true },
+                { text: "cin >> c1.giorno >> c1.mese;", correct: false },
+                { text: "cin >> Data.giorno >> Data.mese;", correct: false },
+                { text: "cin >> c1.scadenza(giorno, mese);", correct: false }
+            ],
+            relatedCard: "card-s4",
+            cardName: "Scheda 4 (Struct Annidate e cin/cout)",
+            explanation: "Per leggere i due campi annidati occorre specificare l'intero percorso per ciascuno di essi: cin >> c1.scadenza.giorno >> c1.scadenza.mese;."
+        },
+        {
+            id: 18,
+            title: "Operazioni tra Campi di Variabili Distinte",
+            description: "Abbiamo due conti correnti 'c1' e 'c2'. Qual è l'istruzione corretta per trasferire 100 euro dal saldo di 'c1' al saldo di 'c2'?",
+            code: "struct ContoCorrente {\n    string iban;\n    float saldo;\n};\n\nContoCorrente c1, c2;",
+            options: [
+                { text: "c1.saldo -= 100; c2.saldo += 100;", correct: true },
+                { text: "ContoCorrente.c1.saldo -= 100; ContoCorrente.c2.saldo += 100;", correct: false },
+                { text: "c1 -= 100; c2 += 100;", correct: false },
+                { text: "saldo.c1 -= 100; saldo.c2 += 100;", correct: false }
+            ],
+            relatedCard: "card-s1",
+            cardName: "Scheda 1 (Tipo vs Variabile e Più Variabili)",
+            explanation: "I saldi appartengono alle rispettive variabili ('c1' e 'c2'). Per modificare i valori si opera direttamente su 'c1.saldo' e 'c2.saldo'."
+        },
+        {
+            id: 19,
+            title: "Stampa Output di un Vettore in Struct",
+            description: "Quale ciclo 'for' stampa correttamente a schermo tutti e 5 i punteggi contenuti nella struct 'giocatore1'?",
+            code: "struct Profilo {\n    string nickname;\n    int punteggi[5];\n};\n\nProfilo giocatore1;",
+            options: [
+                { text: "for(int i=0; i<5; i++) cout << giocatore1.punteggi[i] << \" \";", correct: true },
+                { text: "for(int i=0; i<5; i++) cout << Profilo.punteggi[i] << \" \";", correct: false },
+                { text: "for(int i=0; i<5; i++) cout << giocatore1[i].punteggi << \" \";", correct: false },
+                { text: "cout << giocatore1.punteggi;", correct: false }
+            ],
+            relatedCard: "card-s3",
+            cardName: "Scheda 3 (Vettori dentro Struct)",
+            explanation: "Non è possibile fare 'cout << giocatore1.punteggi' per l'intero array. Occorre iterare con un ciclo 'for' e stampare 'giocatore1.punteggi[i]'."
+        },
+        {
+            id: 20,
+            title: "Debug su Inizializzazione e Tipi",
+            description: "Quale tra le seguenti affermazioni sulla riga di codice `Persona.eta = 20;` è CORRETTA?",
+            code: "struct Persona {\n    string nome;\n    int eta;\n};\n\nPersona p1;",
+            options: [
+                { text: "Genera errore di compilazione perché 'Persona' è un tipo e non una variabile.", correct: true },
+                { text: "È corretta ed imposta l'età di tutte le persone a 20.", correct: false },
+                { text: "È corretta solo se 'eta' è stato definito prima di 'nome'.", correct: false },
+                { text: "Funziona come scorciatoia per impostare l'età della variabile 'p1'.", correct: false }
+            ],
+            relatedCard: "card-s1",
+            cardName: "Scheda 1 (Tipo vs Variabile)",
+            explanation: "'Persona' definisce soltanto il tipo di dato e non esiste in memoria. I tentativi di accedere ai suoi campi (Persona.eta) generano un errore di compilazione."
+        }
+    ];
+
+    // VARIABILE PER MANTENERE I 10 LIVELLI CORRENTI SELEZIONATI E SHUFFLATI
+    let challengeData = [];
+
+    // STATO DELL'APPLICAZIONE
+    let currentLevel = 0;
+    let attemptsLeft = 3;
+    let selectedOptionIndex = null;
+    let score = 0;
+    let timerEnabled = true;
+    let timerInterval = null;
+    let timeLeft = 90;
+    let userAnswers = []; // Traccia gli errori per il riepilogo finale
+
+    // UTILITY: ALGORITMO DI FISHER-YATES PER SHUFFLE CASUALE
+    function shuffleArray(array) {
+        const arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    // GESTIONE TAB
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
+
+        if (tabName === 'scopri') {
+            document.getElementById('btn-tab-scopri').classList.add('active');
+            document.getElementById('view-scopri').classList.add('active');
+        } else {
+            document.getElementById('btn-tab-sfida').classList.add('active');
+            document.getElementById('view-sfida').classList.add('active');
+        }
+    }
+
+    function scrollToCard(cardId) {
+        switchTab('scopri');
+        setTimeout(() => {
+            const el = document.getElementById(cardId);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.style.border = "2px solid var(--accent)";
+                setTimeout(() => { el.style.border = "1px solid var(--border)"; }, 3000);
+            }
+        }, 100);
+    }
+
+    // LOGICA SFIDA
+    function startChallenge() {
+        timerEnabled = document.getElementById('timer-toggle').checked;
+        document.getElementById('box-timer').style.display = timerEnabled ? 'flex' : 'none';
+        
+        // 1. SELEZIONA 10 PROVE CASUALI DAL POOL DI 20
+        const shuffledPool = shuffleArray(challengeDataPool);
+        const selectedQuestions = shuffledPool.slice(0, 10);
+
+        // 2. SHUFFLE DELLE OPZIONI PER CIASCUNA DOMANDA SELEZIONATA
+        challengeData = selectedQuestions.map((q, idx) => {
+            return {
+                ...q,
+                displayLevel: idx + 1,
+                options: shuffleArray(q.options)
+            };
+        });
+
+        currentLevel = 0;
+        score = 0;
+        userAnswers = [];
+
+        document.getElementById('challenge-config').style.display = 'none';
+        document.getElementById('challenge-summary').style.display = 'none';
+        document.getElementById('challenge-game').style.display = 'block';
+
+        loadLevel(currentLevel);
+    }
+
+    function loadLevel(levelIndex) {
+        clearInterval(timerInterval);
+        const data = challengeData[levelIndex];
+        
+        attemptsLeft = 3;
+        selectedOptionIndex = null;
+
+        document.getElementById('lbl-level').textContent = levelIndex + 1;
+        document.getElementById('lbl-attempts').textContent = attemptsLeft;
+        document.getElementById('quiz-title').textContent = `Livello ${levelIndex + 1}: ${data.title}`;
+        document.getElementById('quiz-description').textContent = data.description;
+        document.getElementById('quiz-code').textContent = data.code;
+        
+        const feedbackBox = document.getElementById('feedback-container');
+        feedbackBox.className = 'feedback-box';
+        feedbackBox.style.display = 'none';
+        feedbackBox.innerHTML = '<div id="feedback-text"></div><div id="feedback-nav"></div>';
+
+        const btnSubmit = document.getElementById('btn-submit');
+        btnSubmit.style.display = 'block';
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = "CONFERMA RISPOSTA";
+
+        // Render Opzioni in ordine casuale
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        data.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.textContent = opt.text;
+            btn.onclick = () => selectOption(idx);
+            container.appendChild(btn);
+        });
+
+        // Timer
+        if (timerEnabled) {
+            timeLeft = 90;
+            document.getElementById('lbl-timer').textContent = timeLeft;
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('lbl-timer').textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeout();
+                }
+            }, 1000);
+        }
+    }
+
+    function selectOption(index) {
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.classList.remove('selected'));
+        buttons[index].classList.add('selected');
+        selectedOptionIndex = index;
+    }
+
+    function checkAnswer() {
+        if (selectedOptionIndex === null) {
+            alert("Seleziona una risposta prima di confermare!");
+            return;
+        }
+
+        const data = challengeData[currentLevel];
+        const isCorrect = data.options[selectedOptionIndex].correct;
+        const feedbackBox = document.getElementById('feedback-container');
+        const feedbackText = document.getElementById('feedback-text');
+        const btnSubmit = document.getElementById('btn-submit');
+
+        feedbackBox.style.display = 'block';
+
+        if (isCorrect) {
+            clearInterval(timerInterval);
+            score++;
+            userAnswers.push({ level: currentLevel + 1, title: data.title, success: true });
+
+            feedbackBox.className = 'feedback-box correct';
+            feedbackText.innerHTML = `<span class="icon">✓ Corretto!</span> Ottimo lavoro. Risposta esatta!`;
+            btnSubmit.style.display = 'none';
+
+            disableOptions();
+            showNextButton();
+        } else {
+            attemptsLeft--;
+            document.getElementById('lbl-attempts').textContent = attemptsLeft;
+
+            if (attemptsLeft > 0) {
+                feedbackBox.className = 'feedback-box wrong';
+                feedbackText.innerHTML = `<span class="icon">✗ Errato!</span> Hai ancora ${attemptsLeft} tentativi. 
+                <br>💡 <em>Suggerimento:</em> Consulta la <a class="link-scopri" onclick="scrollToCard('${data.relatedCard}')">${data.cardName}</a> per ripassare il concetto.`;
+            } else {
+                clearInterval(timerInterval);
+                userAnswers.push({ level: currentLevel + 1, title: data.title, success: false });
+
+                feedbackBox.className = 'feedback-box wrong';
+                feedbackText.innerHTML = `<span class="icon">✗ Tentativi esauriti!</span> 
+                <br><strong>Spiegazione:</strong> ${data.explanation}
+                <br> Ripassa la <a class="link-scopri" onclick="scrollToCard('${data.relatedCard}')">${data.cardName}</a>.`;
+                
+                btnSubmit.style.display = 'none';
+                disableOptions();
+                showNextButton();
+            }
+        }
+    }
+
+    function handleTimeout() {
+        userAnswers.push({ level: currentLevel + 1, title: challengeData[currentLevel].title, success: false });
+        const feedbackBox = document.getElementById('feedback-container');
+        const feedbackText = document.getElementById('feedback-text');
+        const btnSubmit = document.getElementById('btn-submit');
+
+        feedbackBox.style.display = 'block';
+        feedbackBox.className = 'feedback-box wrong';
+        feedbackText.innerHTML = `<span class="icon">⏰ Tempo Scaduto!</span> Non hai risposto in tempo per questo livello.`;
+        
+        btnSubmit.style.display = 'none';
+        disableOptions();
+        showNextButton();
+    }
+
+    function disableOptions() {
+        document.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+    }
+
+    function showNextButton() {
+        const feedbackNav = document.getElementById('feedback-nav');
+        feedbackNav.innerHTML = '';
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'btn-action';
+        nextBtn.style.marginTop = '12px';
+        
+        if (currentLevel < challengeData.length - 1) {
+            nextBtn.textContent = "PROSSIMO LIVELLO ➔";
+            nextBtn.onclick = () => { currentLevel++; loadLevel(currentLevel); };
+        } else {
+            nextBtn.textContent = "MOSTRA RISULTATO FINALE 🏆";
+            nextBtn.onclick = showSummary;
+        }
+        feedbackNav.appendChild(nextBtn);
+    }
+
+    function showSummary() {
+        document.getElementById('challenge-game').style.display = 'none';
+        document.getElementById('challenge-summary').style.display = 'block';
+
+        document.getElementById('final-score').textContent = `${score} / ${challengeData.length}`;
+
+        const summaryDetails = document.getElementById('summary-details');
+        let html = '<table class="summary-table"><thead><tr><th>Livello</th><th>Esito</th><th>Ripasso Consigliato</th></tr></thead><tbody>';
+
+        userAnswers.forEach((ans, idx) => {
+            const data = challengeData[idx];
+            const statusSymbol = ans.success ? '<span style="color:var(--success); font-weight:bold;">✓ Superato</span>' : '<span style="color:var(--error); font-weight:bold;">✗ Errato</span>';
+            html += `<tr>
+                <td><strong>Livello ${ans.level}</strong>: ${ans.title}</td>
+                <td>${statusSymbol}</td>
+                <td><a class="link-scopri" onclick="scrollToCard('${data.relatedCard}')">${data.cardName}</a></td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        summaryDetails.innerHTML = html;
+    }
+
+    function resetChallenge() {
+        document.getElementById('challenge-summary').style.display = 'none';
+        document.getElementById('challenge-config').style.display = 'block';
+    }
+</script>
